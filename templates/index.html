@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>食費管理アプリ</h1>
+
+<div class="analysis-button-container">
+    <a href="{{ url_for('analysis') }}" class="analysis-button">データ</a>
+</div>
+
+<form action="{{ url_for('add') }}" method="post">
+    <input type="text" name="name" placeholder="食べたもの" required>
+    <input type="number" step="1" name="amount" placeholder="金額" required>
+    <label for="category">カテゴリ:</label>
+    <select name="category" id="category" required>
+        <option value="朝食">朝食</option>
+        <option value="昼食">昼食</option>
+        <option value="夕食">夕食</option>
+        <option value="おやつ">おやつ</option>
+        <option value="その他">その他</option>
+    </select>
+    <button type="submit">追加</button>
+</form>
+
+<form action="{{ url_for('index') }}" method="get" style="margin-top: 20px;">
+    <label for="date">日付を選択:</label>
+    <input type="date" id="date" name="date" value="{{ selected_date }}">
+    <button type="submit">決定</button>
+</form>
+
+<h2>支出リスト</h2>
+
+<div class="expenses_container">
+    {% if not expenses_by_date %}
+    <p>指定した日付の支出はありません。</p>
+    {% else %}
+    <div class="total_amount">
+        合計金額: ¥{{ total_amount }}
+    </div>
+    {% for date, expenses in expenses_by_date.items() %}
+    <h3>{{ date }}</h3>
+    <ul>
+        {% for expense in expenses %}
+        <li>
+            {{ expense.name }} - ¥{{ expense.amount }} ({{ expense.category or "カテゴリ未設定" }})
+            <a href="{{ url_for('delete', expense_id=expense.id) }}">×</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="analysis-container">
+    <h1>データ</h1>
+    
+    <div class="graphs">
+        <div class="graph-card">
+            <h3>日ごとの支出</h3>
+            <canvas id="dailyChart"></canvas>
+            <div id="dailyData" class="data-table"></div>
+        </div>
+        <div class="graph-card">
+            <h3>カテゴリごとの支出</h3>
+            <canvas id="categoryChart"></canvas>
+            <div id="categoryData" class="data-table"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const dailyLabels = {{ daily_data|map(attribute=0)|list|tojson }};
+    const dailyTotals = {{ daily_data|map(attribute=1)|list|tojson }};
+    const categoryLabels = {{ category_data|map(attribute=0)|list|tojson }};
+    const categoryTotals = {{ category_data|map(attribute=1)|list|tojson }};
+
+    function createGraphs() {
+        const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+        new Chart(dailyCtx, {
+            type: 'bar',
+            data: {
+                labels: dailyLabels,
+                datasets: [{
+                    label: '日ごとの支出',
+                    data: dailyTotals,
+                    backgroundColor: 'rgba(54, 162, 235)',
+                    borderColor: 'rgba(54, 162, 235)',
+                    borderWidth: 1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { title: { display: true, text: '日付' } },
+                    y: { title: { display: true, text: '金額 (¥)' } }
+                },
+                maintainAspectRatio: true
+            }
+        });
+
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'pie',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    data: categoryTotals,
+                    backgroundColor: [
+                        'rgba(255, 99, 132)',
+                        'rgba(54, 162, 235)',
+                        'rgba(255, 206, 86)',
+                        'rgba(75, 192, 192)',
+                        'rgba(153, 102, 255)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132)',
+                        'rgba(54, 162, 235)',
+                        'rgba(255, 206, 86)',
+                        'rgba(75, 192, 192)',
+                        'rgba(153, 102, 255)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: { 
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { position: 'right' } }
+            }
+        });
+
+        renderDataTable('dailyData', dailyLabels, dailyTotals, '日');
+        renderDataTable('categoryData', categoryLabels, categoryTotals, 'カテゴリ');
+    }
+
+    function renderDataTable(containerId, labels, totals, labelType) {
+        const container = document.getElementById(containerId);
+        const table = document.createElement('table');
+        table.classList.add('data-table-table');
+
+        const headerRow = document.createElement('tr');
+        const labelHeader = document.createElement('th');
+        labelHeader.textContent = labelType;
+        const totalHeader = document.createElement('th');
+        totalHeader.textContent = '支出金額';
+        headerRow.appendChild(labelHeader);
+        headerRow.appendChild(totalHeader);
+        table.appendChild(headerRow);
+
+        labels.forEach((label, index) => {
+            const row = document.createElement('tr');
+            const labelCell = document.createElement('td');
+            labelCell.textContent = label;
+            const totalCell = document.createElement('td');
+            totalCell.textContent = `¥${totals[index].toLocaleString()}`;
+            row.appendChild(labelCell);
+            row.appendChild(totalCell);
+            table.appendChild(row);
+        });
+
+        container.appendChild(table);
+    }
+
+    createGraphs();
+</script>
+{% endblock %}
